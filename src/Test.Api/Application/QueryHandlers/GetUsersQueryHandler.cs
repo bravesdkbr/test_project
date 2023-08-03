@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Test.Api.Contract.Models;
+using Test.Api.Domain.Entities;
 using Test.Api.Domain.Queries;
 using Test.Api.Infrastructure.Persistence;
 
@@ -16,27 +18,30 @@ namespace Test.Api.Application.QueryHandlers
 
         public async Task<UserFullModel> Handle(GetUsersQuery request, CancellationToken cancellationToken)
         {
-            var users = _context.Users.OrderBy(x => x.UserName).ToList(); //ascending
-            // var users = _context.Users.OrderByDescending(x => x.UserName).ToList(); //descending
+            IEnumerable<User> users = null;
 
-            var usersModel = new List<UserModel>();
-
-            foreach (var user in users)
+            if(request.OrderType == Domain.Enums.OrderType.Ascending)
             {
-                usersModel.Add(new UserModel
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    PhoneNumber = user.PhoneNumber,
-                    Age = user.Age,
-                    Email = user.Email,
-                    City = user.City
-                });
+                 users = _context.Users.OrderBy(x => x.UserName).Take(request.Count).AsEnumerable();
             }
+            else
+            {
+                users = _context.Users.OrderByDescending(x => x.UserName).Take(request.Count).AsEnumerable();
+            }
+
+            var usersModel = users.Select(x => new UserModel
+            {
+                Id = x.Id,
+                Age = x.Age,
+                UserName = x.UserName,
+                City = x.City,
+                Email = x.Email,
+                PhoneNumber = x.PhoneNumber
+            });
 
             return new UserFullModel
             {
-                UsersModel = usersModel,
+                UsersModel = usersModel.ToList(),
                 TotalUsers = users.Count()
             };
         }

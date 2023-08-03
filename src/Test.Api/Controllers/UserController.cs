@@ -1,11 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Test.Api.Contract.Models;
 using Test.Api.Domain.Commands;
+using Test.Api.Domain.Enums;
 using Test.Api.Domain.Queries;
 
 namespace Test.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -33,9 +35,13 @@ namespace Test.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] GetUsersModel userModel)
         {
-            var result = await _mediator.Send(new GetUsersQuery ());
+            var result = await _mediator.Send(new GetUsersQuery()
+            {
+                OrderType = userModel.OrderType,
+                Count = userModel.Count
+            });
 
             return Ok(result);
         }
